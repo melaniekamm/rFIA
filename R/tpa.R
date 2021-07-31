@@ -220,12 +220,12 @@ tpaStarter <- function(x,
       })
       out <- parLapply(cl, X = names(plts), fun = tpaHelper1, plts,
                        db[names(db) %in% c('COND', 'TREE')],
-                       grpBy, aGrpBy, byPlot)
+                       grpBy, aGrpBy, byPlot, custVar)
       #stopCluster(cl) # Keep the cluster active for the next run
     } else { # Unix systems
       out <- mclapply(names(plts), FUN = tpaHelper1, plts,
                       db[names(db) %in% c('COND', 'TREE')],
-                      grpBy, aGrpBy, byPlot, mc.cores = nCores)
+                      grpBy, aGrpBy, byPlot, custVar, mc.cores = nCores)
     }
   })
 
@@ -313,10 +313,10 @@ tpaStarter <- function(x,
       tEst <- tEst %>%
         left_join(select(db$POP_ESTN_UNIT, CN, STATECD), by = c('ESTN_UNIT_CN' = 'CN')) %>%
         left_join(wgts, by = joinCols) %>%
-        mutate(across(tEst:bTEst2, ~(.*wgt))) %>%
-        mutate(across(tVar:cvEst_bT2, ~(.*(wgt^2)))) %>%
+        mutate(across(tEst:cTEst, ~(.*wgt))) %>%
+        mutate(across(tVar:cvEst_cT, ~(.*(wgt^2)))) %>%
         group_by(ESTN_UNIT_CN, A, .dots = grpBy) %>%
-        summarize(across(tEst:cvEst_bT2, sum, na.rm = TRUE))
+        summarize(across(tEst:cvEst_cT, sum, na.rm = TRUE))
 
 
 
@@ -367,7 +367,8 @@ tpa <- function(db,
                 totals = FALSE,
                 variance = FALSE,
                 byPlot = FALSE,
-                nCores = 1) {
+                nCores = 1,
+                custVar) {
 
   ##  don't have to change original code
   grpBy_quo <- rlang::enquo(grpBy)
@@ -436,20 +437,26 @@ tpa <- function(db,
       summarize_all(sum, na.rm = TRUE) %>%
       mutate(TREE_TOTAL = tEst,
             BA_TOTAL = bEst,
+            CUST_TOTAL = cEst,
             ## Variances
             treeVar = tVar,
             baVar = bVar,
+            cuVar = cVar,
             #aVar = first(aVar),
             cvT = cvEst_t,
             cvB = cvEst_b,
+            cvC = cvEst_c,
+
             ## Sampling Errors
             TREE_SE = sqrt(treeVar) / TREE_TOTAL * 100,
             TREE_VAR = treeVar,
             BA_SE = sqrt(baVar) / BA_TOTAL * 100,
+            CUST_SE = sqrt(cuVar) / CUST_TOTAL * 100,
             BA_VAR = baVar,
+            CUST_VAR = cuVar,
             #N = sum(N, na.rm = TRUE),
             nPlots_TREE = plotIn_TREE) %>%
-      select(grpBy, TREE_TOTAL, BA_TOTAL, treeVar, baVar, cvT, cvB, TREE_SE, BA_SE, TREE_VAR, BA_VAR,
+      select(grpBy, TREE_TOTAL, BA_TOTAL, CUST_TOTAL, treeVar, baVar, cuVar, cvT, cvB, cvC, TREE_SE, BA_SE, CUST_SE, TREE_VAR, BA_VAR, CUST_VAR,
              nPlots_TREE, N, A)
 
     ## IF using polys, we treat each zone as a unique population
@@ -464,10 +471,13 @@ tpa <- function(db,
       group_by(.dots = unique(propGrp)) %>%
       summarize(TREE_TOTAL_full = sum(tTEst, na.rm = TRUE), ## Need to sum this
                 BA_TOTAL_full = sum(bTEst, na.rm = TRUE), ## Need to sum this
+                CUST_TOTAL_full = sum(cTEst, na.rm = TRUE), ## Need to sum this
                 tTVar = sum(tTVar, na.rm = TRUE),
                 bTVar = sum(bTVar, na.rm = TRUE),
+                cTVar = sum(cTVar, na.rm = TRUE),
                 cvTT = sum(cvEst_tT, na.rm = TRUE),
-                cvBT = sum(cvEst_bT, na.rm = TRUE))
+                cvBT = sum(cvEst_bT, na.rm = TRUE),
+                cvCT = sum(cvEst_cT, na.rm = TRUE))
 
 
     suppressWarnings({
@@ -477,21 +487,28 @@ tpa <- function(db,
         left_join(tpTotal, by = unique(propGrp)) %>%
         mutate(TPA = TREE_TOTAL / AREA_TOTAL,
                BAA = BA_TOTAL / AREA_TOTAL,
+               CPA = CUST_TOTAL / AREA_TOTAL,
                tpaVar = (1/AREA_TOTAL^2) * (treeVar + (TPA^2 * aVar) - 2 * TPA * cvT),
                baaVar = (1/AREA_TOTAL^2) * (baVar + (BAA^2 * aVar) - (2 * BAA * cvB)),
+               cpaVar = (1/AREA_TOTAL^2) * (cuVar + (CPA^2 * aVar) - (2 * CPA * cvC)),
                TPA_SE = sqrt(tpaVar) / TPA * 100,
                BAA_SE = sqrt(baaVar) / BAA * 100,
+               CPA_SE = sqrt(cpaVar) / CPA * 100,
                TPA_VAR = tpaVar,
                BAA_VAR = baaVar,
+               CPA_VAR = cpaVar,
                TPA_PERC = TREE_TOTAL / (TREE_TOTAL_full) * 100,
                BAA_PERC = BA_TOTAL / (BA_TOTAL_full) * 100,
+               CPA_PERC = CUST_TOTAL / (CUST_TOTAL_full) * 100,
                tpVar = (1/TREE_TOTAL_full^2) * (treeVar + (TPA_PERC^2 * tTVar) - 2 * TPA_PERC * cvTT),
                bpVar = (1/BA_TOTAL_full^2) * (baVar + (BAA_PERC^2 * bTVar) - (2 * BAA_PERC * cvBT)),
+               cpVar = (1/CUST_TOTAL_full^2) * (cuVar + (CPA_PERC^2 * cTVar) - (2 * CPA_PERC * cvCT)),
                TPA_PERC_SE = sqrt(tpVar) / TPA_PERC * 100,
                BAA_PERC_SE = sqrt(bpVar) / BAA_PERC * 100,
+               CPA_PERC_SE = sqrt(cpVar) / CPA_PERC * 100,
                TPA_PERC_VAR = tpVar,
-               BAA_PERC_VAR = bpVar)
-
+               BAA_PERC_VAR = bpVar,
+               CPA_PERC_VAR = cpVar)
 
     })
 
@@ -499,23 +516,23 @@ tpa <- function(db,
     if (totals) {
       if (variance){
         tOut <- tTotal %>%
-          select(grpBy, TPA, BAA, TPA_PERC, BAA_PERC, TREE_TOTAL, BA_TOTAL, AREA_TOTAL, TPA_VAR, BAA_VAR,
-                 TPA_PERC_VAR, BAA_PERC_VAR, TREE_VAR, BA_VAR, AREA_TOTAL_VAR, nPlots_TREE, nPlots_AREA, N)
+          select(grpBy, TPA, BAA, CPA, TPA_PERC, BAA_PERC, CPA_PERC, TREE_TOTAL, BA_TOTAL, CUST_TOTAL, AREA_TOTAL, TPA_VAR, BAA_VAR, CPA_VAR,
+                 TPA_PERC_VAR, BAA_PERC_VAR, CPA_PERC_VAR, TREE_VAR, BA_VAR, CUST_VAR, AREA_TOTAL_VAR, nPlots_TREE, nPlots_AREA, N)
       } else {
         tOut <- tTotal %>%
-          select(grpBy, TPA, BAA, TPA_PERC, BAA_PERC, TREE_TOTAL, BA_TOTAL, AREA_TOTAL, TPA_SE, BAA_SE,
-                 TPA_PERC_SE, BAA_PERC_SE, TREE_SE, BA_SE, AREA_TOTAL_SE, nPlots_TREE, nPlots_AREA, N)
+          select(grpBy, TPA, BAA, CPA, TPA_PERC, BAA_PERC, CPA_PERC, TREE_TOTAL, BA_TOTAL, CUST_TOTAL, AREA_TOTAL, TPA_SE, BAA_SE, CPA_SE,
+                 TPA_PERC_SE, BAA_PERC_SE, CPA_PERC_SE, TREE_SE, BA_SE, CUST_SE, AREA_TOTAL_SE, nPlots_TREE, nPlots_AREA, N)
       }
 
     } else {
       if (variance) {
         tOut <- tTotal %>%
-          select(grpBy, TPA, BAA, TPA_PERC, BAA_PERC,  TPA_VAR, BAA_VAR,
-                 TPA_PERC_VAR, BAA_PERC_VAR, nPlots_TREE, nPlots_AREA, N)
+          select(grpBy, TPA, BAA, CPA, TPA_PERC, BAA_PERC, CPA_PERC, TPA_VAR, BAA_VAR, CPA_VAR,
+                 TPA_PERC_VAR, BAA_PERC_VAR, CPA_PERC_VAR, nPlots_TREE, nPlots_AREA, N)
       } else {
         tOut <- tTotal %>%
-          select(grpBy, TPA, BAA, TPA_PERC, BAA_PERC,  TPA_SE, BAA_SE,
-                 TPA_PERC_SE, BAA_PERC_SE, nPlots_TREE, nPlots_AREA, N)
+          select(grpBy, TPA, BAA, CPA, TPA_PERC, BAA_PERC, CPA_PERC, TPA_SE, BAA_SE, CPA_SE,
+                 TPA_PERC_SE, BAA_PERC_SE, CPA_PERC_SE, nPlots_TREE, nPlots_AREA, N)
       }
 
     }

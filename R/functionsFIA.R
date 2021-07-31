@@ -1212,6 +1212,7 @@ makeClasses <- function(x, interval = NULL, lower = NULL, upper = NULL, brks = N
 }
 
 #### Basal Area Function (returns sq units of diameter)
+#' @export
 basalArea <- function(diameter, DIA_MID = NULL){
   #ba = ((diameter/2)^2) * pi
   # if (!is.null(DIA_MID)){
