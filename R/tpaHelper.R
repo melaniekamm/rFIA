@@ -37,13 +37,16 @@ tpaHelper1 <- function(x, plts, db, grpBy, aGrpBy, byPlot){
       group_by(!!!grpSyms, PLT_CN) %>%
       summarize(TPA = sum(TPA_UNADJ * tDI, na.rm = TRUE),
                 BAA = sum(basalArea(DIA) * TPA_UNADJ * tDI, na.rm = TRUE),
+                BAA2 = sum(basalArea(DIA) * TPA_UNADJ * tDI, na.rm = TRUE),
                 tT = sum(TPA_UNADJ * pDI, na.rm = TRUE),
                 bT = sum(basalArea(DIA) * TPA_UNADJ * pDI, na.rm = TRUE),
+                bT2 = sum(basalArea(DIA) * TPA_UNADJ * pDI, na.rm = TRUE),
                 nStems = length(which(tDI == 1))) %>%
       mutate(TPA_PERC = TPA / tT,
-             BAA_PERC = BAA / bT) %>%
+             BAA_PERC = BAA / bT,
+             BAA2_PERC = BAA2/ bT2) %>%
       as.data.frame() %>%
-      select(-c(tT, bT))
+      select(-c(tT, bT,  bT2))
 
     a = NULL
 
@@ -67,8 +70,10 @@ tpaHelper1 <- function(x, plts, db, grpBy, aGrpBy, byPlot){
       group_by(PLT_CN, PLOT_BASIS, !!!grpSyms) %>%
       summarize(tPlot = sum(TPA_UNADJ * tDI, na.rm = TRUE),
                 bPlot = sum(basalArea(DIA) * TPA_UNADJ * tDI, na.rm = TRUE),
+                bPlot2 = sum(basalArea(DIA) * TPA_UNADJ * tDI, na.rm = TRUE),
                 tTPlot = sum(TPA_UNADJ * pDI, na.rm = TRUE),
                 bTPlot = sum(basalArea(DIA) * TPA_UNADJ * pDI, na.rm = TRUE),
+                bTPlot2 = sum(basalArea(DIA) * TPA_UNADJ * pDI, na.rm = TRUE),
                 plotIn = ifelse(sum(tDI >  0, na.rm = TRUE), 1,0)) %>%
       as.data.frame()
   }
@@ -165,14 +170,18 @@ tpaHelper2 <- function(x, popState, a, t, grpBy, aGrpBy, method){
       fa = fa * aAdj,
       tPlot = tPlot * tAdj,
       bPlot = bPlot * tAdj,
+      bPlot2 = bPlot2 * tAdj,
       tTPlot = tTPlot * tAdj,
-      bTPlot = bTPlot * tAdj) %>%
+      bTPlot = bTPlot * tAdj,
+      bTPlot2 = bTPlot2 * tAdj) %>%
     ## Extra step for variance issues
     group_by(ESTN_UNIT_CN, ESTN_METHOD, STRATUM_CN, PLT_CN, !!!grpSyms) %>%
     summarize(tPlot = sum(tPlot, na.rm = TRUE),
               bPlot = sum(bPlot, na.rm = TRUE),
+              bPlot2 = sum(bPlot2, na.rm = TRUE),
               tTPlot = sum(tTPlot, na.rm = TRUE),
               bTPlot = sum(bTPlot, na.rm = TRUE),
+              bTPlot2 = sum(bTPlot2, na.rm = TRUE),
               fa = dplyr::first(fa),
               plotIn = ifelse(sum(plotIn >  0, na.rm = TRUE), 1,0),
               nh = dplyr::first(P2POINTCNT),
@@ -189,40 +198,52 @@ tpaHelper2 <- function(x, popState, a, t, grpBy, aGrpBy, method){
               p2eu = dplyr::first(p2eu),
 
               ## dtplyr is fast, but requires a few extra steps, so we'll finish
-              ## means and variances in subseqent mutate step
+              ## means and variances in subsequent mutate step
 
               ## Strata means
               tStrat = sum(tPlot, na.rm = TRUE),
               bStrat = sum(bPlot, na.rm = TRUE),
+              bStrat2 = sum(bPlot2, na.rm = TRUE),
               tTStrat = sum(tTPlot, na.rm = TRUE),
               bTStrat = sum(bTPlot, na.rm = TRUE),
+              bTStrat2 = sum(bTPlot2, na.rm = TRUE),
               aStrat = dplyr::first(aStrat),
               plotIn_TREE = sum(plotIn, na.rm = TRUE),
 
               ## Strata level variances
               tv = sum(tPlot^2, na.rm = TRUE),
               bv = sum(bPlot^2, na.rm = TRUE),
+              bv2 = sum(bPlot2^2, na.rm = TRUE),
               tTv = sum(tTPlot^2, na.rm = TRUE),
               bTv = sum(bTPlot^2, na.rm = TRUE),
+              bTv2 = sum(bTPlot2^2, na.rm = TRUE),
 
               ## Strata level covariances
               cvStrat_t = sum(fa*tPlot, na.rm = TRUE),
               cvStrat_b = sum(fa*bPlot, na.rm = TRUE),
+              cvStrat_b2 = sum(fa*bPlot2, na.rm = TRUE),
               cvStrat_tT = sum(tPlot*tTPlot,na.rm = TRUE),
-              cvStrat_bT = sum(bPlot*bTPlot,na.rm = TRUE)) %>%
+              cvStrat_bT = sum(bPlot*bTPlot,na.rm = TRUE),
+              cvStrat_bT2 = sum(bPlot2*bTPlot2,na.rm = TRUE)) %>%
     mutate(tStrat = tStrat / nh,
            bStrat = bStrat / nh,
+           bStrat2 = bStrat2 / nh,
            tTStrat = tTStrat / nh,
            bTStrat = bTStrat / nh,
+           bTStrat2 = bTStrat2 / nh,
            adj = nh * (nh-1),
            tv = (tv - (nh*tStrat^2)) / adj,
            bv = (bv - (nh*bStrat^2)) / adj,
+           bv2 = (bv2 - (nh*bStrat2^2)) / adj,
            tTv = (tTv - (nh*tTStrat^2)) / adj,
            bTv = (bTv - (nh*bTStrat^2)) / adj,
+           bTv2 = (bTv2 - (nh*bTStrat2^2)) / adj,
            cvStrat_t = (cvStrat_t - (nh * tStrat * aStrat)) / adj,
            cvStrat_b = (cvStrat_b - (nh * bStrat * aStrat)) / adj,
+           cvStrat_b2 = (cvStrat_b2 - (nh * bStrat2 * aStrat)) / adj,
            cvStrat_tT = (cvStrat_tT - (nh * tStrat * tTStrat)) / adj,
-           cvStrat_bT = (cvStrat_bT - (nh * bStrat * bTStrat)) / adj) %>%
+           cvStrat_bT = (cvStrat_bT - (nh * bStrat * bTStrat)) / adj,
+           cvStrat_bT2 = (cvStrat_bT2 - (nh * bStrat2 * bTStrat2)) / adj) %>%
     as.data.frame() %>%
 
 
@@ -231,20 +252,27 @@ tpaHelper2 <- function(x, popState, a, t, grpBy, aGrpBy, method){
     group_by(ESTN_UNIT_CN, !!!grpSyms) %>%
     summarize(tEst = unitMean(ESTN_METHOD, a, nh,  w, tStrat),
               bEst = unitMean(ESTN_METHOD, a, nh,  w, bStrat),
+              bEst2 = unitMean(ESTN_METHOD, a, nh,  w, bStrat2),
               tTEst = unitMean(ESTN_METHOD, a, nh,  w, tTStrat),
               bTEst = unitMean(ESTN_METHOD, a, nh,  w, bTStrat),
+              bTEst2 = unitMean(ESTN_METHOD, a, nh,  w, bTStrat2),
               plotIn_TREE = sum(plotIn_TREE, na.rm = TRUE),
               N = dplyr::first(p2eu),
               A = dplyr::first(a),
               tVar = unitVarNew(method = 'var', ESTN_METHOD, a, nh, dplyr::first(p2eu), w, tv, tStrat, tEst),
               bVar = unitVarNew(method = 'var', ESTN_METHOD, a, nh, dplyr::first(p2eu), w, bv, bStrat, bEst),
+              bVar2 = unitVarNew(method = 'var', ESTN_METHOD, a, nh, dplyr::first(p2eu), w, bv2, bStrat2, bEst2),
               tTVar = unitVarNew(method = 'var', ESTN_METHOD, a, nh, dplyr::first(p2eu), w, tTv, tTStrat, tTEst),
               bTVar = unitVarNew(method = 'var', ESTN_METHOD, a, nh, dplyr::first(p2eu), w, bTv, bTStrat, bTEst),
+              bTVar2 = unitVarNew(method = 'var', ESTN_METHOD, a, nh, dplyr::first(p2eu), w, bTv2, bTStrat2, bTEst2),
+
               # Unit Covariance
               cvEst_t = unitVarNew(method = 'cov', ESTN_METHOD, a, nh, dplyr::first(p2eu), w, cvStrat_t, tStrat, tEst, aStrat, aEst),
               cvEst_b = unitVarNew(method = 'cov', ESTN_METHOD, a, nh, dplyr::first(p2eu), w, cvStrat_b, bStrat, bEst, aStrat, aEst),
+              cvEst_b2 = unitVarNew(method = 'cov', ESTN_METHOD, a, nh, dplyr::first(p2eu), w, cvStrat_b2, bStrat2, bEst2, aStrat, aEst),
               cvEst_tT = unitVarNew(method = 'cov', ESTN_METHOD, a, nh, dplyr::first(p2eu), w, cvStrat_t, tStrat, tEst, tTStrat, tTEst),
-              cvEst_bT = unitVarNew(method = 'cov', ESTN_METHOD, a, nh, dplyr::first(p2eu), w, cvStrat_b, bStrat, bEst, bTStrat, bTEst))
+              cvEst_bT = unitVarNew(method = 'cov', ESTN_METHOD, a, nh, dplyr::first(p2eu), w, cvStrat_b, bStrat, bEst, bTStrat, bTEst),
+              cvEst_bT2 = unitVarNew(method = 'cov', ESTN_METHOD, a, nh, dplyr::first(p2eu), w, cvStrat_b2, bStrat2, bEst2, bTStrat2, bTEst2))
 
 
   out <- list(tEst = tEst, aEst = aEst)

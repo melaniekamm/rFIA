@@ -313,10 +313,10 @@ tpaStarter <- function(x,
       tEst <- tEst %>%
         left_join(select(db$POP_ESTN_UNIT, CN, STATECD), by = c('ESTN_UNIT_CN' = 'CN')) %>%
         left_join(wgts, by = joinCols) %>%
-        mutate(across(tEst:bTEst, ~(.*wgt))) %>%
-        mutate(across(tVar:cvEst_bT, ~(.*(wgt^2)))) %>%
+        mutate(across(tEst:bTEst2, ~(.*wgt))) %>%
+        mutate(across(tVar:cvEst_bT2, ~(.*(wgt^2)))) %>%
         group_by(ESTN_UNIT_CN, A, .dots = grpBy) %>%
-        summarize(across(tEst:cvEst_bT, sum, na.rm = TRUE))
+        summarize(across(tEst:cvEst_bT2, sum, na.rm = TRUE))
 
 
 
