@@ -15,7 +15,8 @@ tpaStarter <- function(x,
                        byPlot = FALSE,
                        nCores = 1,
                        remote,
-                       mr){
+                       mr,
+                       custVar){
 
 
 
@@ -392,7 +393,7 @@ tpa <- function(db,
                 bySpecies, bySizeClass,
                 landType, treeType, method,
                 lambda, treeDomain, areaDomain,
-                totals, byPlot, nCores, remote, mr)
+                totals, byPlot, nCores, remote, mr, custVar)
   ## Bring the results back
   out <- unlist(out, recursive = FALSE)
   if (remote) out <- dropStatesOutsidePolys(out)
