@@ -16,9 +16,10 @@ tpaStarter <- function(x,
                        nCores = 1,
                        remote,
                        mr,
-                       custVar){
+                       custVar_quo = NULL){
 
 
+  library(logger)
 
   ## Read required data, prep the database -------------------------------------
   reqTables <- c('PLOT', 'TREE', 'COND', 'POP_PLOT_STRATUM_ASSGN',
@@ -72,10 +73,10 @@ tpaStarter <- function(x,
 
   ## Convert grpBy to character
   grpBy <- grpByToChar(db, grpBy_quo)
+  custVar <- grpByToChar(db, custVar_quo)
 
   # Save original grpBy for pretty return with spatial objects
   grpByOrig <- grpBy
-
 
   # I like a unique ID for a plot through time
   if (byPlot) {grpBy <- c('pltID', grpBy)}
@@ -97,8 +98,6 @@ tpaStarter <- function(x,
   if (byPlot & returnSpatial){
     grpBy <- c(grpBy, 'LON', 'LAT')
   }
-
-
 
 
 
@@ -218,15 +217,16 @@ tpaStarter <- function(x,
         library(dplyr)
         library(stringr)
         library(rFIA)
+        library(logger)
       })
       out <- parLapply(cl, X = names(plts), fun = tpaHelper1, plts,
                        db[names(db) %in% c('COND', 'TREE')],
-                       grpBy, aGrpBy, byPlot, custVar)
+                       grpBy, aGrpBy, byPlot, custVar=custVar)
       #stopCluster(cl) # Keep the cluster active for the next run
     } else { # Unix systems
       out <- mclapply(names(plts), FUN = tpaHelper1, plts,
                       db[names(db) %in% c('COND', 'TREE')],
-                      grpBy, aGrpBy, byPlot, custVar, mc.cores = nCores)
+                      grpBy, aGrpBy, byPlot, custVar=custVar, mc.cores = nCores)
     }
   })
 
@@ -369,12 +369,14 @@ tpa <- function(db,
                 variance = FALSE,
                 byPlot = FALSE,
                 nCores = 1,
-                custVar) {
+                custVar = NULL) {
 
   ##  don't have to change original code
   grpBy_quo <- rlang::enquo(grpBy)
   areaDomain <- rlang::enquo(areaDomain)
   treeDomain <- rlang::enquo(treeDomain)
+  custVar_quo <- rlang::enquo(custVar)
+
 
   ## Handle iterator if db is remote
   remote <- ifelse(class(db) == 'Remote.FIA.Database', 1, 0)
@@ -393,7 +395,7 @@ tpa <- function(db,
                 bySpecies, bySizeClass,
                 landType, treeType, method,
                 lambda, treeDomain, areaDomain,
-                totals, byPlot, nCores, remote, mr, custVar)
+                totals, byPlot, nCores, remote, mr, custVar_quo = custVar_quo)
   ## Bring the results back
   out <- unlist(out, recursive = FALSE)
   if (remote) out <- dropStatesOutsidePolys(out)
