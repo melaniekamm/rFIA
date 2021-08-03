@@ -1,5 +1,5 @@
 
-## Sometimes these read as dates, and that breaks readFIA when mutliple states are read
+## Sometimes these read as dates, and that breaks readFIA when multiple states are read
 ## Maybe also think about dropping uncommon columns from TREE. Could save a lot of memory
 dropTheseCols <- function() {
 

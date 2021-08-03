@@ -100,8 +100,6 @@ tpaStarter <- function(x,
   }
 
 
-
-
   ## Build a domain indicator for each observation (1 or 0) --------------------
   ## Land type
   db$COND$landD <- landTypeDomain(landType,
@@ -184,6 +182,8 @@ tpaStarter <- function(x,
                            !c(names(db$COND) %in% grpP)]
   grpT <- names(db$TREE)[names(db$TREE) %in% grpBy &
                            !c(names(db$TREE) %in% c(grpP, grpC))]
+  # add custom variable to columns to keep from TREE table
+  grpT <- c(grpT, custVar)
 
   ### Only joining tables necessary to produce plot level estimates
   db$PLOT <- select(db$PLOT, c('PLT_CN', 'STATECD', 'MACRO_BREAKPOINT_DIA',
@@ -196,6 +196,8 @@ tpaStarter <- function(x,
   db$TREE <- select(db$TREE, c('PLT_CN', 'CONDID', 'DIA', 'SPCD', 'TPA_UNADJ',
                                'SUBP', 'TREE', all_of(grpT), 'tD', 'typeD')) %>%
     filter(PLT_CN %in% db$PLOT$PLT_CN)
+
+  logger::log_info(paste0('Is custom variable in TREE table?', custVar %in% names(db$TREE)))
 
   # Separate area grouping names from tree grouping names
   if (!is.null(polys)){
@@ -212,7 +214,7 @@ tpaStarter <- function(x,
   suppressWarnings({
     ## Compute estimates in parallel -- Clusters in windows, forking otherwise
     if (Sys.info()['sysname'] == 'Windows'){
-      cl <- makeCluster(nCores)
+      cl <- makeCluster(nCores, outfile="")
       clusterEvalQ(cl, {
         library(dplyr)
         library(stringr)
@@ -257,6 +259,7 @@ tpaStarter <- function(x,
     ## Population estimation
   } else {
     ## back to dataframes
+
     out <- unlist(out, recursive = FALSE)
     a <- bind_rows(out[names(out) == 'a'])
     t <- bind_rows(out[names(out) == 't'])

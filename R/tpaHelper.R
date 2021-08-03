@@ -3,8 +3,8 @@ tpaHelper1 <- function(x, plts, db, grpBy, aGrpBy, byPlot, custVar){
   ## Selecting the plots for one county
   db$PLOT <- plts[[x]]
 
-  # Convert custom variable specified by user to a symbol
-  #CUSTVAR <- sym(custVar)
+  # convert custom variable to symbol to use below
+  CUSTVAR <- sym(custVar)
 
   ### Only joining tables necessary to produce plot level estimates, adjusted for non-response
   data <- db$PLOT %>%
@@ -66,6 +66,7 @@ tpaHelper1 <- function(x, plts, db, grpBy, aGrpBy, byPlot, custVar){
                 plotIn = ifelse(sum(aDI >  0, na.rm = TRUE), 1,0))
 
     grpSyms <- syms(grpBy)
+
     ## Tree plts
     t <- data %>%
       lazy_dt() %>%
