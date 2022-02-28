@@ -5,15 +5,13 @@
 \title{Extract design features for FIA inventories}
 
 \description{
-\lifecycle{maturing}
-
 Extracts design information for post-stratified FIA inventories, intended to aid the development of alternative model-based estimators of forest variables. Design information is currently limited to estimation unit land area (AREA_USED) and strata weights (proportion of estimation unit represented by each stratum). This is sufficient to acknowledge design features in an a-spatial model, however, inclusion probabilities and strata boundaries will be necessary to incorporate spatial predictors.
 }
 
 \usage{
 getDesignInfo(db,
               type = c("ALL", "CURR", "VOL", "GROW", "MORT",
-                       "REMV", "CHANGE", "DWM", "REGEN"),
+                       "REMV", "CHNG", "DWM", "REGEN"),
               mostRecent = TRUE,
               evalid = NULL)
 }
@@ -22,7 +20,7 @@ getDesignInfo(db,
 \arguments{
   \item{db}{\code{FIA.Database} or \code{Remote.FIA.Database} object produced from \code{\link{readFIA}} or \code{\link{getFIA}}. If a \code{Remote.FIA.Database}, data will be read in and processed state-by-state to conserve RAM (see details for an example).}
 
-  \item{type}{character ('ALL', 'CURR', 'VOL', 'GROW', 'MORT', 'REMV', 'CHANGE', 'DWM', 'REGEN'). See Reference Population Evaluation Table Description Type Table in FIADB P2 User Guide (References) for descriptions of evaluation types.}
+  \item{type}{character ('ALL', 'CURR', 'VOL', 'GROW', 'MORT', 'REMV', 'CHNG', 'DWM', 'REGEN'). See Reference Population Evaluation Table Description Type Table in FIADB P2 User Guide (References) for descriptions of evaluation types.}
 
   \item{mostRecent}{logical; if TRUE, returns EVALIDs associated with most recent inventory.}
 

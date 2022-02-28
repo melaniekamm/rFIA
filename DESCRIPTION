@@ -1,7 +1,7 @@
 Package: rFIA
 Type: Package
-Title: Space-Time Estimation of Forest Variables using the FIA Database
-Version: 0.3.2
+Title: Estimation of Forest Variables using the FIA Database
+Version: 1.0.0
 Author: Hunter Stanke [aut, cre],
   Andrew Finley [aut]
 Maintainer: Hunter Stanke <stankehu@msu.edu>
@@ -22,8 +22,7 @@ Imports:
     bit64,
     tidyselect (>= 1.0.0),
     rlang,
-    ggplot2,
-    lifecycle
+    ggplot2
 Suggests: 
     knitr,
     rmarkdown,
@@ -31,4 +30,9 @@ Suggests:
     R2jags,
     coda
 RoxygenNote: 7.1.2
+<<<<<<< HEAD
 RdMacros: lifecycle
+=======
+URL: https://github.com/hunter-stanke/rFIA
+BugReports: https://github.com/hunter-stanke/rFIA/issues
+>>>>>>> upstream/master
