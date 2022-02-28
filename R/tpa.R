@@ -271,8 +271,14 @@ tpaStarter <- function(x,
     ## back to dataframes
 
     out <- unlist(out, recursive = FALSE)
-    message(names(out))
-    a <- bind_rows(out[names(out) == 'a'])
+
+    a <- tryCatch({
+      bind_rows(out[names(out) == 'a'])
+    },
+    error=function(cond) {
+      message(paste("tpa function error at bind_rows(out[names(out) == 'a']). Inspect 'out' object."))
+      return(out)
+    })
     t <- bind_rows(out[names(out) == 't'])
 
     ## Adding YEAR to groups
@@ -293,10 +299,14 @@ tpaStarter <- function(x,
     })
     ## back to dataframes
     out <- unlist(out, recursive = FALSE)
-    aEst <- bind_rows(out[names(out) == 'aEst'])
+    aEst <- tryCatch({
+      bind_rows(out[names(out) == 'aEst'])
+    },
+    error=function(cond) {
+      message(paste("tpa function error at bind_rows(out[names(out) == 'aEst']). Inspect 'out' object."))
+      return(out)
+    })
     tEst <- bind_rows(out[names(out) == 'tEst'])
-
-
 
 
     ## Compute moving average weights if not TI ----------------------------------
@@ -417,7 +427,13 @@ tpa <- function(db,
   ## Bring the results back
   out <- unlist(out, recursive = FALSE)
   if (remote) out <- dropStatesOutsidePolys(out)
-  aEst <- bind_rows(out[names(out) == 'aEst'])
+  aEst <- tryCatch({
+    bind_rows(out[names(out) == 'aEst'])
+  },
+  error=function(cond) {
+    message(paste("tpa function error at bind_rows(out[names(out) == 'aEst']). Inspect 'out' object."))
+    return(out)
+  })
   tEst <- bind_rows(out[names(out) == 'tEst'])
   grpBy <- out[names(out) == 'grpBy'][[1]]
   aGrpBy <- out[names(out) == 'aGrpBy'][[1]]
