@@ -271,6 +271,7 @@ tpaStarter <- function(x,
     ## back to dataframes
 
     out <- unlist(out, recursive = FALSE)
+    message(names(out))
     a <- bind_rows(out[names(out) == 'a'])
     t <- bind_rows(out[names(out) == 't'])
 
