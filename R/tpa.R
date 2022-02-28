@@ -432,6 +432,7 @@ tpa <- function(db,
   },
   error=function(cond) {
     message(paste("tpa function error at bind_rows(out[names(out) == 'aEst']). Inspect 'out' object."))
+    message(names(out))
     return(out)
   })
   tEst <- bind_rows(out[names(out) == 'tEst'])
