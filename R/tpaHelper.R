@@ -81,7 +81,7 @@ tpaHelper1 <- function(x, plts, db, grpBy, aGrpBy, byPlot, custVar){
                 tTPlot = sum(TPA_UNADJ * pDI, na.rm = TRUE),
                 bTPlot = sum(basalArea(DIA) * TPA_UNADJ * pDI, na.rm = TRUE),
                 cTPlot = sum(!!CUSTVAR * TPA_UNADJ * pDI, na.rm = TRUE),
-                plotIn = ifelse(sum(tDI >  0, na.rm = TRUE), 1,0)) %>%
+                plotIn = ifelse(sum(tDI, na.rm = TRUE)  >  0, 1,0)) %>%
       as.data.frame()
   }
 
@@ -110,7 +110,7 @@ tpaHelper2 <- function(x, popState, a, t, grpBy, aGrpBy, method){
 
   ## Strata level estimates
   aStrat <- a %>%
-    lazy_dt() %>%
+    #lazy_dt() %>%
     ## Rejoin with population tables
     inner_join(select(popState[[x]], -c(STATECD)), by = 'PLT_CN') %>%
     mutate(
@@ -148,7 +148,7 @@ tpaHelper2 <- function(x, popState, a, t, grpBy, aGrpBy, method){
   grpSyms <- syms(grpBy)
   ## Strata level estimates
   tEst <- t %>%
-    lazy_dt() %>%
+    #lazy_dt() %>%
     ## Rejoin with population tables
     inner_join(select(popState[[x]], -c(STATECD)), by = 'PLT_CN') %>%
     ## Need this for covariance later on

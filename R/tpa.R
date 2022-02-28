@@ -244,10 +244,6 @@ tpaStarter <- function(x,
 
 
 
-
-
-
-
   ## If byPlot, return plot-level estimates ------------------------------------
   ## Otherwise continue to population estimation -------------------------------
   if (byPlot){
@@ -272,13 +268,7 @@ tpaStarter <- function(x,
 
     out <- unlist(out, recursive = FALSE)
 
-    a <- tryCatch({
-      bind_rows(out[names(out) == 'a'])
-    },
-    error=function(cond) {
-      message(paste("tpa function error at bind_rows(out[names(out) == 'a']). Inspect 'out' object."))
-      return(out)
-    })
+    a <- bind_rows(out[names(out) == 'a'])
     t <- bind_rows(out[names(out) == 't'])
 
     ## Adding YEAR to groups
@@ -299,13 +289,8 @@ tpaStarter <- function(x,
     })
     ## back to dataframes
     out <- unlist(out, recursive = FALSE)
-    aEst <- tryCatch({
-      bind_rows(out[names(out) == 'aEst'])
-    },
-    error=function(cond) {
-      message(paste("tpa function error at bind_rows(out[names(out) == 'aEst']). Inspect 'out' object."))
-      return(out)
-    })
+
+    aEst <- bind_rows(out[names(out) == 'aEst'])
     tEst <- bind_rows(out[names(out) == 'tEst'])
 
 
@@ -427,14 +412,7 @@ tpa <- function(db,
   ## Bring the results back
   out <- unlist(out, recursive = FALSE)
   if (remote) out <- dropStatesOutsidePolys(out)
-  aEst <- tryCatch({
-    bind_rows(out[names(out) == 'aEst'])
-  },
-  error=function(cond) {
-    message(paste("tpa function error at bind_rows(out[names(out) == 'aEst']). Inspect 'out' object."))
-    message(names(out))
-    return(out)
-  })
+  aEst <- bind_rows(out[names(out) == 'aEst'])
   tEst <- bind_rows(out[names(out) == 'tEst'])
   grpBy <- out[names(out) == 'grpBy'][[1]]
   aGrpBy <- out[names(out) == 'aGrpBy'][[1]]
