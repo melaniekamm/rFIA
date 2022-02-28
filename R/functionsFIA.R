@@ -141,7 +141,7 @@ dropStatesOutsidePolys <- function(x) {
   x <- x[x != 'no plots in polys']
 
   if (length(x) < 1) {
-    stop('No plots in db overlap with polys.')
+    warning('No plots in db overlap with polys.')
   }
 
   return(x)

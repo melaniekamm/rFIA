@@ -16,7 +16,7 @@ tpaStarter <- function(x,
                        nCores = 1,
                        remote,
                        mr,
-                       custVar_quo = NULL){
+                       custVar_quo){
 
 
   library(logger)
@@ -73,7 +73,12 @@ tpaStarter <- function(x,
 
   ## Convert grpBy to character
   grpBy <- grpByToChar(db, grpBy_quo)
-  custVar <- grpByToChar(db, custVar_quo)
+
+  if (!is.null(custVar_quo)) {
+    custVar <- grpByToChar(db, custVar_quo)
+  } else {
+    custVar <- NULL
+  }
 
   # Save original grpBy for pretty return with spatial objects
   grpByOrig <- grpBy
@@ -182,8 +187,11 @@ tpaStarter <- function(x,
                            !c(names(db$COND) %in% grpP)]
   grpT <- names(db$TREE)[names(db$TREE) %in% grpBy &
                            !c(names(db$TREE) %in% c(grpP, grpC))]
+
   # add custom variable to columns to keep from TREE table
-  grpT <- c(grpT, custVar)
+  if (!is.null(custVar_quo)) {
+    grpT <- c(grpT, custVar)
+  }
 
   ### Only joining tables necessary to produce plot level estimates
   db$PLOT <- select(db$PLOT, c('PLT_CN', 'STATECD', 'MACRO_BREAKPOINT_DIA',
@@ -197,7 +205,9 @@ tpaStarter <- function(x,
                                'SUBP', 'TREE', all_of(grpT), 'tD', 'typeD')) %>%
     filter(PLT_CN %in% db$PLOT$PLT_CN)
 
-  logger::log_info(paste0('Is custom variable in TREE table?', custVar %in% names(db$TREE)))
+  if (!is.null(custVar_quo)) {
+  logger::log_info(paste0('Is custom variable in TREE table? ', custVar %in% names(db$TREE)))
+  }
 
   # Separate area grouping names from tree grouping names
   if (!is.null(polys)){
@@ -378,8 +388,12 @@ tpa <- function(db,
   grpBy_quo <- rlang::enquo(grpBy)
   areaDomain <- rlang::enquo(areaDomain)
   treeDomain <- rlang::enquo(treeDomain)
-  custVar_quo <- rlang::enquo(custVar)
 
+  if (!is.null(custVar)) {
+    custVar_quo <- rlang::enquo(custVar)
+  } else {
+    custVar_quo <- NULL
+  }
 
   ## Handle iterator if db is remote
   remote <- ifelse(class(db) == 'Remote.FIA.Database', 1, 0)
@@ -578,6 +592,11 @@ tpa <- function(db,
                                      PLOT_STATUS_CD == 2 ~ 'Non-forest',
                                      PLOT_STATUS_CD == 3 ~ 'Non-sampled')) %>%
       relocate(PLOT_STATUS, .after = PLOT_STATUS_CD)
+  }
+
+  # take out columns for custom variable if none was provided
+  if(is.null(custVar_quo)) {
+    tOut <- dplyr::select(tOut, -dplyr::starts_with('CUST'), -dplyr::starts_with('CPA'))
   }
 
   return(tOut)

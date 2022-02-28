@@ -4,8 +4,11 @@ tpaHelper1 <- function(x, plts, db, grpBy, aGrpBy, byPlot, custVar){
   db$PLOT <- plts[[x]]
 
   # convert custom variable to symbol to use below
-  CUSTVAR <- sym(custVar)
-
+  if (!is.null(custVar)) {
+    CUSTVAR <- sym(custVar)
+  } else {
+    CUSTVAR <- NULL
+  }
   ### Only joining tables necessary to produce plot level estimates, adjusted for non-response
   data <- db$PLOT %>%
     left_join(db$COND, by = c('PLT_CN')) %>%
