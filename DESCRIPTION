@@ -30,9 +30,5 @@ Suggests:
     R2jags,
     coda
 RoxygenNote: 7.1.2
-<<<<<<< HEAD
-RdMacros: lifecycle
-=======
 URL: https://github.com/hunter-stanke/rFIA
 BugReports: https://github.com/hunter-stanke/rFIA/issues
->>>>>>> upstream/master
