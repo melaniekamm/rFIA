@@ -332,7 +332,7 @@ tpaStarter <- function(x,
           DIA >= 5 & DIA < MACRO_BREAKPOINT_DIA ~ 'SUBP',
           DIA >= MACRO_BREAKPOINT_DIA ~ 'MACR')) %>%
       dplyr::filter(!is.na(TREE_BASIS)) %>%
-      dplyr::select(PLT_CN, TREE_BASIS, SUBP, TREE, !!!grpSyms, tPlot, bPlot) %>%
+      dplyr::select(PLT_CN, TREE_BASIS, SUBP, TREE, !!!grpSyms, tPlot, bPlot, cPlot) %>%
       as.data.frame()
 
     ## Return a tree/condition list ready to be handed to `customPSE`
