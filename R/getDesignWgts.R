@@ -4,7 +4,8 @@ getDesignInfo <- function(db,
                           type = c('ALL','CURR','VOL','GROW','MORT',
                                    'REMV','CHNG','DWM','REGEN'),
                           mostRecent = TRUE,
-                          evalid = NULL) {
+                          evalid = NULL,
+                          method) {
 
   ## Must have an FIA.Database or a remote one
   if (!c(class(db) %in% c('FIA.Database', 'Remote.FIA.Database'))) {
@@ -113,12 +114,17 @@ getDesignInfo <- function(db,
 
   }
 
-
+  # if method is 'annual' keep periodic inventories, otherwise select 2003 and forward
+  if (method == 'annual') {
+    years <- unique(eval$YEAR)
+  } else {
+    years <- unique(eval$YEAR[eval$YEAR >= 2003])
+  }
 
   ## Get remaining design info
   strata <- evals %>%
     ## Drop all periodic inventories
-    dplyr::filter(YEAR >= 2003) %>%
+    dplyr::filter(YEAR %in% years) %>% # if method is annual, this doesn't do anything.
     ## Join estimation unit
     dplyr::left_join(dplyr::select(db$POP_ESTN_UNIT, ESTN_UNIT_CN = CN,
                                    P1PNTCNT_EU, AREA_USED, EVAL_CN), by = 'EVAL_CN') %>%

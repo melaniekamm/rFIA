@@ -693,10 +693,11 @@ handlePops <- function(db, evalType, method, mr, pltList = NULL, ga = FALSE){
   ## Reset so we don't breka design info
   class(db) <- 'FIA.Database'
 
-  ## Pull all design infor for the relevant inventories
+  ## Pull all design info for the relevant inventories
   pops <- getDesignInfo(db,
                         type = evalType,
-                        mostRecent = FALSE) # Will have been carried out already
+                        mostRecent = FALSE,  # Will have been carried out already
+                        method = method)
 
   ## If a most-recent subset, make sure that we don't get two reporting years in
   ## western states
