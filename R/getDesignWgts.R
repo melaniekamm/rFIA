@@ -116,9 +116,9 @@ getDesignInfo <- function(db,
 
   # if method is 'annual' keep periodic inventories, otherwise select 2003 and forward
   if (method == 'annual') {
-    years <- unique(eval$YEAR)
+    years <- unique(evals$YEAR)
   } else {
-    years <- unique(eval$YEAR[eval$YEAR >= 2003])
+    years <- unique(evals$YEAR[evals$YEAR >= 2003])
   }
 
   ## Get remaining design info

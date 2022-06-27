@@ -308,7 +308,8 @@ tpaStarter <- function(x,
       ## Adding PROP_BASIS so we can handle adjustment factors at strata level
       dplyr::distinct(PLT_CN, CONDID, .keep_all = TRUE) %>%
       dplyr::mutate(fa = CONDPROP_UNADJ * aDI) %>%
-      dplyr::select(PLT_CN, AREA_BASIS = PROP_BASIS, CONDID, !!!aGrpSyms, fa)
+      dplyr::select(PLT_CN, AREA_BASIS = PROP_BASIS, CONDID, !!!aGrpSyms, fa) %>%
+      dplyr::mutate(AREA_BASIS = if_else(AREA_BASIS == "", "SUBP", AREA_BASIS))
 
 
     grpSyms <- syms(grpBy)
